@@ -1,0 +1,636 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>24‑Point Card Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#f7f7f8; --panel:#fff; --brand:#0ea5e9; --text:#333; --muted:#666;
+      --success:#28a745; --error:#dc3545; --warning:#ffc107; --info:#17a2b8;
+      --board-max: 640px;
+      --card-h: 220px;
+      --card-w: calc(var(--board-max)/4 - 16px);
+      --op-btn-h: 56px; /* Larger operator buttons */
+    }
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:var(--bg);color:var(--text)}
+    .wrap{max-width:980px;margin:0 auto;padding:20px}
+
+    /* Header */
+    .game-header{text-align:center;margin-bottom:16px}
+    .game-title{font-size:2rem;margin:0;color:var(--brand)}
+    .game-subtitle{color:var(--muted);margin:6px 0 0}
+
+    .panel{background:var(--panel);border-radius:12px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+    .topline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:10px}
+    #question{font-weight:600}
+    #timer{margin-left:auto;font-variant-numeric:tabular-nums;background:#eef;padding:4px 8px;border-radius:8px}
+    .right-tools{display:flex;align-items:center;gap:10px}
+    details.settings summary{cursor:pointer;color:#555}
+    details.settings[open]{background:#fff;border-radius:8px;padding:8px 10px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+    .settings-row{display:flex;gap:12px;align-items:center;margin-top:6px}
+    .link{color:#0a58ca;text-decoration:underline;cursor:pointer}
+
+    .board{max-width:var(--board-max);margin:0 auto;width:100%}
+
+    /* Cards grid */
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(4, 1fr);
+      gap:12px;
+      margin:12px 0;
+      width:100%;
+    }
+    .card{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:12px;
+      background:#fff;
+      box-shadow:0 4px 8px rgba(0,0,0,.1);
+      height:var(--card-h);
+      width:var(--card-w);
+      margin:0 auto;
+    }
+    .card img{
+      display:block;
+      height:100%;
+      width:100%;
+      border-radius:12px;
+      cursor:pointer;
+      object-fit:contain;
+    }
+
+    /* Operator panel - more visible */
+    .op-panel {
+      background: var(--panel);
+      border-radius: 12px;
+      padding: 14px 8px;
+      margin: 16px 0 8px;
+      width: 100%;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .ops-wrap {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .ops-wrap button {
+      min-width: var(--op-btn-h);
+      height: var(--op-btn-h);
+      padding: 0 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 24px; /* Much larger font */
+      transition: all 0.2s;
+    }
+
+
+    /* More distinct operator buttons */
+    .ops-wrap button[data-op="+"] {
+      background: #4fc3f7;
+      color: white;
+      font-size: 28px; /* Extra large plus */
+    }
+    
+    .ops-wrap button[data-op="-"] {
+      background: #4fc3f7;
+      color: white;
+      font-size: 32px; /* Extra large minus */
+      padding-top: 4px; /* Better alignment */
+    }
+    
+    .ops-wrap button[data-op="*"] {
+      background: #66bb6a;
+      color: white;
+      font-size: 28px; /* Larger multiplication */
+    }
+    
+    /* new*/
+  /* Updated operator panel styles */
+  .ops-wrap button[data-op="/"] {
+    background: #66bb6a;
+    color: white;
+    font-size: 28px;
+    position: relative;
+    padding-bottom: 8px; /* Better vertical alignment */
+  }
+
+  /* More natural division symbol */
+  .ops-wrap button[data-op="/"]::before {
+    content: "÷";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Hide the original slash */
+  .ops-wrap button[data-op="/"] span {
+    visibility: hidden;
+  }
+
+    
+    .ops-wrap button[data-op="^"] {
+      background: #ffa726;
+      color: white;
+      font-size: 20px;
+      padding-bottom: 8px; /* Better alignment */
+    }
+    
+    .ops-wrap button[data-op="("],
+    .ops-wrap button[data-op=")"] {
+      background: #ba68c8;
+      color: white;
+      font-size: 24px;
+    }
+
+    /* Answer panel moved up */
+    .answer-container{
+      position:relative;
+      margin:8px 0 16px;
+      width:100%;
+    }
+    .answer-box{
+      width:100%;
+      padding:12px 40px 12px 12px;
+      font-size:1.05rem;
+      border:2px solid #ddd;
+      border-radius:10px;
+      box-sizing:border-box;
+    }
+    .answer-feedback{
+      position:absolute;
+      right:10px;
+      top:50%;
+      transform:translateY(-50%);
+      font-size:1.4rem
+    }
+    .success-icon{color:var(--success)} 
+    .error-icon{color:var(--error)}
+
+    /* Button rows */
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 10px 0;
+      width: 100%;
+      flex-wrap: wrap;
+    }
+    
+    button{
+      padding: 10px 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 16px;
+      min-width: 80px;
+    }
+    .primary-btn{background:var(--brand);color:white}
+    .success-btn{background:var(--success);color:white}
+    .info-btn{background:var(--info);color:white}
+    .warning-btn{background:var(--warning);color:black}
+    .danger-btn{background:var(--error);color:white}
+    .secondary-btn{background:#78909c;color:white}
+    .clear-btn{background:var(--warning);color:black} /* Yellow clear button */
+
+    /* Solutions + messages + stats */
+    #solutionPanel{
+      display:none;
+      background:#fff7ed;
+      border-radius:10px;
+      padding:10px;
+      margin-top:10px;
+      width:100%;
+    }
+    .solution-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+      gap:6px;
+      margin-top:8px
+    }
+    .status.status-success {
+      color: var(--success);
+    }
+    .status.status-error {
+      color: var(--error);
+    }
+    .status-success {
+      color: var(--success); /* or use green directly: #28a745 */
+    }
+    .status-error {
+      color: var(--error);   /* or use red directly: #d00 */
+    }
+    .status {
+      text-align: center;
+      font-weight: 600;
+      min-height: 24px;
+      margin: 10px 0;
+      color: var(--error); /* uses red defined in root */
+    }
+    .stats{
+      display:flex;
+      justify-content:center;
+      gap:14px;
+      flex-wrap:wrap;
+      color:#777;
+      font-size:.95rem;
+      margin-top:12px;
+      width:100%;
+    }
+    .stats span{min-width:100px;display:inline-block}
+
+    @media (max-width:720px){
+      :root{
+        --board-max: 94vw;
+        --card-h: 160px;
+        --card-w: calc(var(--board-max)/2 - 16px);
+        --op-btn-h: 48px;
+      }
+      .cards{
+        grid-template-columns:repeat(2, 1fr)
+      }
+      .button-row{
+        gap: 6px;
+      }
+      button{
+        padding: 8px 10px;
+        font-size: 14px;
+        min-width: 70px;
+      }
+      .ops-wrap button {
+        font-size: 20px;
+        padding: 0 10px;
+      }
+      .ops-wrap button[data-op="+"] {
+        font-size: 24px;
+      }
+      .ops-wrap button[data-op="-"] {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="game-header">
+      <h1 class="game-title">24‑Point Card Game</h1>
+      <p class="game-subtitle">Use exactly 4 cards with + − × ÷ (and parentheses) to make 24</p>
+    </header>
+
+    <div class="panel">
+      <div class="topline">
+        <span id="question">Dealing…</span>
+        <span id="timer">00:00.0</span>
+        <div class="right-tools">
+          <details class="settings">
+            <summary>Settings</summary>
+            <div class="settings-row">
+              <label>Theme
+                <select id="theme">
+                  <option value="classic">Classic</option>
+                  <option value="kids">Kids</option>
+                  <option value="seniors">Seniors</option>
+                </select>
+              </label>
+              <label>Difficulty
+                <select id="level">
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </label>
+            </div>
+          </details>
+          <span class="link" id="howtoLink" title="How to play">?</span>
+        </div>
+      </div>
+
+      <div class="board">
+        <!-- Cards grid -->
+        <div id="cards" class="cards"></div>
+
+        <!-- Operator panel with more visible operators -->
+        <div class="op-panel">
+          <div class="ops-wrap" id="ops">
+            <button data-op="+">+</button>
+            <button data-op="-">−</button>
+            <button data-op="*">×</button>
+            <button data-op="/"><span>/</span></button>
+            <button data-op="^">^</button>
+            <button data-op="(">(</button>
+            <button data-op=")">)</button>
+          </div>
+        </div>
+
+        <!-- Feedback -->
+        <div id="msg" class="status"></div>
+
+        <!-- Answer panel moved up -->
+        <div class="answer-container">
+          <input id="answer" class="answer-box" type="text"
+                 placeholder="Example: (A+Q)*(T-1)  —  T=10, ^=power" />
+          <div id="answerFeedback" class="answer-feedback"></div>
+        </div>
+
+        <!-- First button row -->
+        <div class="button-row">
+          <button id="backspace" class="danger-btn">⌫ Back</button>
+          <button id="clear" class="clear-btn">Clear</button> <!-- Yellow clear button -->
+          <button id="no" class="danger-btn">No Solution (N)</button>
+          <button id="check" class="success-btn">Check (Enter)</button>
+          <button id="next" class="primary-btn">Deal (D)</button>
+        </div>
+
+        <!-- Second button row -->
+        <div class="button-row">
+          <button id="skip" class="warning-btn">Skip (S)</button>
+          <button id="help" class="info-btn">Help (H)</button>
+          <button id="helpAll" class="info-btn">Help All (Shift+H)</button>
+          <button id="restart" class="danger-btn">Restart</button>
+          <button id="exit" class="secondary-btn">Exit</button>
+        </div>
+
+        <!-- Solutions -->
+        <div id="solutionPanel"><div id="solutionMsg"></div></div>
+
+
+        <!-- Stats -->
+        <div class="stats">
+          <span id="played">Played: 0</span>
+          <span id="solved">Solved: 0</span>
+          <span id="revealed">Revealed: 0</span>
+          <span id="skipped">Skipped: 0</span>
+          <span id="totalTime">Time: 00:00</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How‑to modal -->
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="howtoTitle" style="display:none;align-items:center;justify-content:center;position:fixed;inset:0;background:rgba(0,0,0,.35)">
+    <div class="modal" style="background:#fff;max-width:680px;width:90vw;border-radius:12px;padding:16px 18px;box-shadow:0 10px 30px rgba(0,0,0,.25)">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <h3 id="howtoTitle" style="margin:0 0 8px">How to play</h3>
+        <button class="close" id="modalClose" style="margin-left:auto;cursor:pointer">✕</button>
+      </div>
+      <div class="content" style="line-height:1.5">
+        <ul>
+          <li>Use each of the 4 numbers exactly once to make <b>24</b>.</li>
+          <li>Allowed: <b>+</b> <b>−</b> <b>*</b> <b>/</b> <b>^</b> (power) and parentheses.</li>
+          <li>Ranks: <b>A=1</b>, <b>J=11</b>, <b>Q=12</b>, <b>K=13</b>, <b>T=10</b>.</li>
+          <li>Shortcuts: Enter=Check, D=Deal, N=No solution, H=Help, Shift+H=Help all, S=Skip.</li>
+          <li>Click a card to insert its rank into the answer box.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const $ = (q)=>document.querySelector(q);
+
+  // State
+  let current = null;
+  const stats = { played:0, solved:0, revealed:0, skipped:0, totalTime:0 };
+  let currentStatus='idle';
+  let revealedThisQuestion=false;
+
+  // Timer
+  let tStart=0, tTick=null;
+  const fmt=(ms)=>{ const T=Math.max(0,Math.floor(ms)), t=Math.floor((T%1000)/100), s=Math.floor(T/1000)%60, m=Math.floor(T/60000); return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${t}`; };
+  function timerStart(){ timerStop(); tStart=performance.now(); $('#timer').textContent='00:00.0'; tTick=setInterval(()=>{$('#timer').textContent=fmt(performance.now()-tStart)},100); }
+  function timerStop(){ if(tTick){ clearInterval(tTick); tTick=null; } }
+  function addToTotalTime(){ if(tStart){ stats.totalTime += Math.floor((performance.now()-tStart)/1000); tStart=0; updateStats(); } }
+
+  // DOM
+  const el = {
+    theme: $('#theme'), level: $('#level'),
+    question: $('#question'), cards: $('#cards'),
+    answer: $('#answer'), feedback: $('#answerFeedback'),
+    solutionPanel: $('#solutionPanel'), solutionMsg: $('#solutionMsg'),
+    msg: $('#msg'),
+    played: $('#played'), solved: $('#solved'), revealed: $('#revealed'), skipped: $('#skipped'), total: $('#totalTime')
+  };
+
+  function resetStats() {
+    stats.played = 0;
+    stats.solved = 0;
+    stats.revealed = 0;
+    stats.skipped = 0;
+    stats.totalTime = 0;
+    updateStats();
+    $('#msg').textContent = 'Game restarted!';
+  }
+
+  function updateStats(){
+    el.played.textContent=`Played: ${stats.played}`;
+    el.solved.textContent=`Solved: ${stats.solved}`;
+    el.revealed.textContent=`Revealed: ${stats.revealed}`;
+    el.skipped.textContent=`Skipped: ${stats.skipped}`;
+    const m=String(Math.floor(stats.totalTime/60)).padStart(2,'0'), s=String(stats.totalTime%60).padStart(2,'0');
+    el.total.textContent=`Time: ${m}:${s}`;
+  }
+  function clearPanels(){
+    el.feedback.textContent=''; el.feedback.className='answer-feedback';
+    el.msg.textContent=''; el.solutionPanel.style.display='none'; el.solutionMsg.textContent='';
+  }
+  function preprocess(expr){ return expr.replace(/\^/g,'**').replace(/×/g,'*').replace(/÷/g,'/'); }
+
+  // caret helpers
+  function setCaret(pos){ el.answer.selectionStart=el.answer.selectionEnd=pos; }
+  function insertAtCursor(text){
+    const inp=el.answer, start=inp.selectionStart ?? inp.value.length, end=inp.selectionEnd ?? inp.value.length;
+    const before=inp.value.slice(0,start), after=inp.value.slice(end);
+    inp.value = before + text + after;
+    let pos = start + text.length;
+    if(text==='()'){ pos = start+1; }
+    inp.focus(); setCaret(pos);
+  }
+  function backspaceAtCursor(){
+    const inp=el.answer, start=inp.selectionStart ?? 0, end=inp.selectionEnd ?? 0;
+    if (start===end && start>0){
+      inp.value = inp.value.slice(0, start-1) + inp.value.slice(end);
+      setCaret(start-1);
+    } else {
+      // delete selection
+      inp.value = inp.value.slice(0, start) + inp.value.slice(end);
+      setCaret(start);
+    }
+    inp.focus();
+  }
+  function clearAnswer(){ el.answer.value=''; el.answer.focus(); }
+
+  // Deal
+  async function deal(){
+    if(current && currentStatus==='pending'){ stats.skipped++; updateStats(); addToTotalTime(); }
+    clearPanels();
+    el.cards.innerHTML=''; el.question.textContent='Dealing…';
+    revealedThisQuestion=false; currentStatus='pending';
+
+    try{
+      const r = await fetch(`/api/next?theme=${encodeURIComponent(el.theme.value)}&level=${encodeURIComponent(el.level.value)}`);
+      if(!r.ok){ throw new Error('fetch'); }
+      const data = await r.json();
+
+      if (data.exhausted){
+        el.question.textContent = data.message || 'No more puzzles at this difficulty.';
+        current = null; currentStatus='idle';
+        return;
+      }
+
+      current = data; stats.played++; updateStats();
+      el.question.textContent = `Q${data.seq} — Cards: ${data.question}`;
+
+      // four cards
+      data.images.forEach(c=>{
+        const img=document.createElement('img'); 
+        img.src=c.url; 
+        img.alt=c.code;
+        img.className = 'card';
+        const rankToken = c.code.startsWith('10') ? 'T' : c.code[0];
+        img.title = `Click to insert ${rankToken}`;
+        img.addEventListener('click', ()=> insertAtCursor(rankToken));
+        el.cards.appendChild(img);
+      });
+
+      el.answer.value=''; el.answer.focus(); timerStart();
+    }catch(e){
+      el.question.textContent='No new questions. Try another difficulty level again.';
+      currentStatus='idle';
+    }
+  }
+
+  // Check
+  async function check(){
+    if(!current) return;
+    const expr = el.answer.value.trim(); if(!expr) return;
+    try{
+      const r = await fetch('/api/check', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ values: current.values, answer: preprocess(expr) })
+      });
+      const res = await r.json();
+      if(res.ok){
+        el.feedback.textContent='✓'; el.feedback.className='answer-feedback success-icon';
+        el.msg.textContent = (res.kind==='no-solution') ? 'Correct: no solution' : '24! Correct!';
+	el.msg.className = 'status status-success'
+	el.msg.classList.remove('status-error');
+	el.msg.classList.add('status-success'); 
+        stats.solved++; currentStatus='solved'; timerStop(); addToTotalTime(); updateStats();
+      } else {
+        el.feedback.textContent='✗'; 
+	el.feedback.className='answer-feedback error-icon';
+	el.msg.className = 'status status-error';
+	el.msg.classList.remove('status-success'); 
+	el.msg.classList.add('status-error');
+        let m = res.reason || 'Try again!'; if(typeof res.value==='number') m += ` (got ${res.value})`;
+        el.msg.textContent = m;
+      }
+    }catch(e){ el.msg.textContent='Error checking answer'; }
+  }
+
+  // Help
+  async function help(all=false){
+    if(!current) return;
+    try{
+      const r = await fetch('/api/help', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ values: current.values, all })
+      });
+      if(!r.ok) throw new Error('help fetch');
+      const data = await r.json();
+      el.msg.textContent=''; el.solutionPanel.style.display='block';
+      if(!data.has_solution){
+        el.solutionMsg.textContent='No solution.';
+      } else if (all){
+        el.solutionMsg.innerHTML = `Solutions (${data.solutions.length}):`;
+        const grid=document.createElement('div'); grid.className='solution-grid';
+        data.solutions.forEach(s=>{ const d=document.createElement('div'); d.textContent=s; grid.appendChild(d); });
+        el.solutionMsg.appendChild(grid);
+      } else {
+        el.solutionMsg.innerHTML = `<strong>Solution:</strong> ${data.solutions[0]}`;
+      }
+      if(!revealedThisQuestion){ stats.revealed++; revealedThisQuestion=true; updateStats(); }
+      currentStatus='revealed';
+    }catch(e){ el.solutionPanel.style.display='block'; el.solutionMsg.textContent='Error loading help'; }
+  }
+
+  function skip(){ if(currentStatus==='pending'){ stats.skipped++; updateStats(); addToTotalTime(); } currentStatus='skipped'; deal(); }
+
+  // Operator panel handling
+  $('#ops').addEventListener('click', (e)=>{
+    if(!(e.target instanceof HTMLButtonElement)) return;
+    const op = e.target.dataset.op;
+    if(op==='(')    return insertAtCursor('()');
+    if(op==='*')    return insertAtCursor('*');
+    if(op==='/')    return insertAtCursor('/');
+    return insertAtCursor(op);
+  });
+
+  // Button handlers
+  $('#backspace').addEventListener('click', backspaceAtCursor);
+  $('#clear').addEventListener('click', clearAnswer);
+  $('#next').addEventListener('click', deal);
+  $('#check').addEventListener('click', check);
+  $('#no').addEventListener('click', ()=>{ el.answer.value='no solution'; check(); });
+  $('#help').addEventListener('click', ()=>help(false));
+  $('#helpAll').addEventListener('click', ()=>help(true));
+  $('#skip').addEventListener('click', skip);
+  $('#restart').addEventListener('click', ()=>{
+    if(confirm('Are you sure you want to restart? This will reset all game statistics.')) {
+      fetch('/api/restart', { method: 'POST' })
+        .then(() => {
+          resetStats();
+          deal();
+        })
+        .catch(e => console.error('Restart error:', e));
+    }
+  });
+  $('#exit').addEventListener('click', ()=>{
+    if(confirm('Exit to home page? Your progress will be saved.')) {
+      fetch('/api/exit', { method: 'POST' })
+        .then(() => {
+          // window.location.href = '/home.html'; // Uncomment in real implementation
+          alert('In a complete implementation, this would navigate to the home page');
+        })
+        .catch(e => console.error('Exit error:', e));
+    }
+  });
+
+  // Shortcuts
+  document.addEventListener('keydown',(e)=>{
+    if(e.target===el.answer && e.key==='Enter'){ e.preventDefault(); check(); return; }
+    if(e.ctrlKey||e.metaKey||e.altKey) return;
+    const k=e.key.toLowerCase();
+    if(k==='d'){ e.preventDefault(); deal(); }
+    else if(k==='n'){ e.preventDefault(); el.answer.value='no solution'; check(); }
+    else if(k==='h' && e.shiftKey){ e.preventDefault(); help(true); }
+    else if(k==='h'){ e.preventDefault(); help(false); }
+    else if(k==='s'){ e.preventDefault(); skip(); }
+  });
+
+  // Persist settings
+  const tSaved=localStorage.getItem('theme'); if(tSaved) $('#theme').value=tSaved;
+  const lSaved=localStorage.getItem('level'); if(lSaved) $('#level').value=lSaved;
+  $('#theme').addEventListener('change', ()=>localStorage.setItem('theme',$('#theme').value));
+  $('#level').addEventListener('change', ()=>localStorage.setItem('level',$('#level').value));
+
+  // Modal
+  const showModal=()=>{$('#modalBackdrop').style.display='flex';};
+  const hideModal=()=>{$('#modalBackdrop').style.display='none';};
+  $('#howtoLink').addEventListener('click', showModal);
+  $('#modalClose').addEventListener('click', hideModal);
+  $('#modalBackdrop').addEventListener('click',(e)=>{ if(e.target===$('#modalBackdrop')) hideModal(); });
+
+  // Go
+  deal(); updateStats();
+})();
+</script>
+</body>
+</html>
