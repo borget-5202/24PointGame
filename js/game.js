@@ -18,3 +18,11 @@ window.onload = () => {
   document.getElementById('new-game-btn').addEventListener('click', newGame);
   newGame();
 };
+
+console.log("Testing image paths:");
+['AC','AD','AH','AS'].forEach(code => {
+  const img = new Image();
+  img.src = `assets/pictures/${code}.png`;
+  img.onload = () => console.log(`${code}.png loads OK`);
+  img.onerror = () => console.error(`${code}.png FAILED`);
+});
