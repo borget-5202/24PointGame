@@ -22,14 +22,14 @@ window.onload = () => {
 console.log("Testing image paths:");
 ['AC','AD','AH','AS'].forEach(code => {
   const img = new Image();
-  img.src = `assets/pictures/${code}.png`;
+  img.src = `assets/pictures/classic/${code}.png`;
   img.onload = () => console.log(`${code}.png loads OK`);
   img.onerror = () => console.error(`${code}.png FAILED`);
 });
 console.log("Testing image paths:");
 ['9C','5D','8H','QD'].forEach(code => {
   const img = new Image();
-  img.src = `assets/pictures/${code}.png`;
+  img.src = `assets/pictures/classic/${code}.png`;
   img.onload = () => console.log(`${code}.png loads OK`);
   img.onerror = () => console.error(`${code}.png FAILED`);
 });
