@@ -10,7 +10,7 @@ function newGame() {
   ).sort(() => Math.random() - 0.5);
 
   deck.slice(0, 4).forEach((card, i) => {
-    document.getElementById(`card${i+1}`).src = `assets/pictures/classic/${card.fileName}`;
+    document.getElementById(`card${i+1}`).src = `assets/pictures/${card.fileName}`;
   });
 }
 
