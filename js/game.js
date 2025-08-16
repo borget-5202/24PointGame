@@ -26,3 +26,11 @@ console.log("Testing image paths:");
   img.onload = () => console.log(`${code}.png loads OK`);
   img.onerror = () => console.error(`${code}.png FAILED`);
 });
+console.log("Testing image paths:");
+['9C','5D','8H','QD'].forEach(code => {
+  const img = new Image();
+  img.src = `assets/pictures/${code}.png`;
+  img.onload = () => console.log(`${code}.png loads OK`);
+  img.onerror = () => console.error(`${code}.png FAILED`);
+});
+
